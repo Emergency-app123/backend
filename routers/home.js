@@ -7,5 +7,8 @@ router.get("/", (req, res, next) => {
 router.get("/login", (req, res, next) => {
   res.send("Login Successfully");
 });
+router.get("/SignUp", (req, res, next) => {
+  res.send("SignUp Successfully");
+});
 
 module.exports = router;
