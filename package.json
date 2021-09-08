@@ -1,18 +1,27 @@
 {
-  "name": "emergency-app",
+  "name": "emergency-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon app.js"
   },
-  "author": "shubham",
+  "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.983.0",
+    "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "mongoose": "^6.0.2",
-    "morgan": "^1.10.0",
-    "mysql": "^2.18.1"
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.3",
+    "multer-s3": "^2.9.0",
+    "mysql": "^2.18.1",
+    "nexmo": "^2.9.1",
+    "node-fetch": "^3.0.0",
+    "node-rekognition": "^0.4.0",
+    "nodemon": "^2.0.12",
+    "socket.io": "^4.2.0"
   }
 }
