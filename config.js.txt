@@ -1,9 +1,0 @@
-/// This is a comment for JS code
-
-Comment line 1
-
-Comment line 2
-
-
-
-///
