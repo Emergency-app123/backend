@@ -1,8 +1,9 @@
 const pool = require("../../config/database");
+
 module.exports = {
   create: (data, callback) => {
     pool.query(
-      `INSERT INTO USER(name,contact,email,password,img_path)
+      `INSERT INTO USER(name,contact,email,password,img_id)
             VALUES(?,?,?,?,?)
             `,
       [
@@ -10,7 +11,7 @@ module.exports = {
         data.data_body.contact,
         data.data_body.email,
         data.data_body.password,
-        data.data_body.img_path,
+        data.FaceId,
       ],
       (error, results) => {
         if (error) {
@@ -28,6 +29,7 @@ module.exports = {
       if (error) {
         return callback(error);
       }
+      console.log("results", results);
       return callback(null, results[0]);
     });
   },
@@ -118,7 +120,7 @@ module.exports = {
                 data.body.contact_name,
                 data.body.primary_contact,
                 data.body.secondary_contact,
-                data.body.remarks,
+                "Good",
               ],
               (err, response) => {
                 if (err) {
@@ -165,6 +167,56 @@ module.exports = {
           return callback(error);
         } else {
           return callback(null, results[0]);
+        }
+      }
+    );
+  },
+  checkImageId: (data, callback) => {
+    pool.query(`select * from user where img_id=?`, [data], (err, result) => {
+      if (err) {
+        return callback(error);
+      } else {
+        return callback(null, result[0]);
+      }
+    });
+  },
+  saveLocation: (data, callback) => {},
+  saveNotifyToken: (data, callback) => {
+    pool.query(
+      "select * from notifications where user_id=?",
+      [data.userId],
+      (err, response) => {
+        if (err) {
+          return callback(err);
+        } else {
+          if (response.length > 0) {
+            return callback(null, response);
+          } else {
+            pool.query(
+              "Insert into notifications(user_id,notification) values(?,?)",
+              [data.userId, data.notifyToken],
+              (err, response) => {
+                if (err) {
+                  return callback(err);
+                } else {
+                  return callback(null, response);
+                }
+              }
+            );
+          }
+        }
+      }
+    );
+  },
+  sendSaveNotify: (data, callback) => {
+    pool.query(
+      "select * from notifications where user_id=?",
+      [data.userId],
+      (err, result) => {
+        if (err) {
+          return callback(err);
+        } else {
+          return callback(null, result);
         }
       }
     );

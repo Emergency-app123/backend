@@ -1,5 +1,7 @@
 const {
   createUser,
+  getNotify,
+  deleteObject,
   changePassword,
   login,
   getMedicalRecord,
@@ -13,6 +15,7 @@ const { checkToken } = require("../../auth/token_validaiton");
 const aws = require("aws-sdk");
 var multer = require("multer");
 var multerS3 = require("multer-s3");
+const path = require("path");
 
 const s3 = new aws.S3({
   accessKeyId: process.env.S3_ACCESS_KEY,
@@ -30,6 +33,12 @@ var upload = multer({
     },
   }),
 });
+// const upload_image = multer({ storage: multer.memoryStorage() });
+
+var storage = multer.memoryStorage();
+var upload_image = multer({
+  storage: storage,
+}).single("photo");
 
 router.post("/", upload.array("photo"), createUser);
 router.post("/login", login);
@@ -39,9 +48,11 @@ router.put(
   checkToken,
   updateRegisterEmergencyDetails
 );
-router.post("/detect-face", checkToken, getFace);
+
+router.post("/detect-face", getFace);
 router.post("/medicalRecord", checkToken, getMedicalRecord);
 router.post("/Update-medical-records", checkToken, UpdateMedicalRecord);
 router.post("/Change-password", checkToken, changePassword);
-
+router.post("/delete-object", deleteObject);
+router.post("/send-notifications", getNotify);
 module.exports = router;
