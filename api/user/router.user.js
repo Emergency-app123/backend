@@ -1,4 +1,5 @@
 const {
+  ChangeContactOfUser,
   createUser,
   getNotify,
   deleteObject,
@@ -9,6 +10,8 @@ const {
   registerEmergencyDetails,
   updateRegisterEmergencyDetails,
   getFace,
+  setStatusReports,
+  ChangeNameOfUser,
 } = require("./user.controller");
 const router = require("express").Router();
 const { checkToken } = require("../../auth/token_validaiton");
@@ -55,4 +58,7 @@ router.post("/Update-medical-records", checkToken, UpdateMedicalRecord);
 router.post("/Change-password", checkToken, changePassword);
 router.post("/delete-object", deleteObject);
 router.post("/send-notifications", getNotify);
+router.post("/setStatusReport", checkToken, setStatusReports);
+router.post("/ChangeUserName", checkToken, ChangeNameOfUser);
+router.post("/ChangeUserContact", checkToken, ChangeContactOfUser);
 module.exports = router;

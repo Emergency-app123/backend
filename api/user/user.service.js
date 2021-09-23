@@ -28,9 +28,10 @@ module.exports = {
     pool.query("select * from user where email=?", [data], (error, results) => {
       if (error) {
         return callback(error);
+      } else {
+        console.log("results", results);
+        return callback(null, results[0]);
       }
-      console.log("results", results);
-      return callback(null, results[0]);
     });
   },
   registerEmergency: (data, callback) => {
@@ -43,6 +44,9 @@ module.exports = {
         } else {
           if (results.length > 0) {
             console.log("check length", results.length);
+            return callback(null, results[0]);
+          } else if (results.length == 0) {
+            console.log(results.length);
             return callback(null, results[0]);
           } else {
             pool.query(
@@ -70,19 +74,22 @@ module.exports = {
     );
   },
   UpdateRegisterEmergency: (data, callback) => {
+    console.log(data);
     pool.query(
       "update emergency_details set blood_group=?,insurance_number=?,contact_name=?,contact_number=? where user_id=?",
       [
         data.body.blood_group,
         data.body.insurance_number,
-        data.body.contact_name,
-        data.body.contact_number,
-        "1",
+        data.body.name,
+        data.body.contact,
+        data.ID,
       ],
       (err, results) => {
         if (err) {
+          console.log(err);
           return callback(err);
         } else {
+          console.log(results);
           return callback(null, results[0]);
         }
       }
@@ -209,14 +216,76 @@ module.exports = {
     );
   },
   sendSaveNotify: (data, callback) => {
+    console.log("id", data.userId);
+
     pool.query(
-      "select * from notifications where user_id=?",
+      `
+      SELECT *,medical_details.user_id as UserMainId from user INNER JOIN medical_details ON medical_details.primary_contact=user.contact OR medical_details.secondary_contact=user.contact INNER JOIN notifications ON notifications.user_id=user.id where user.id=? AND (Select id from user where report_incident=1 AND medical_details.user_id=user.id)`,
       [data.userId],
       (err, result) => {
         if (err) {
           return callback(err);
         } else {
-          return callback(null, result);
+          if (result.length > 0) {
+            pool.query(
+              `select * from user where id=?`,
+              [result[0].UserMainId !== undefined ? result[0].UserMainId : ""],
+              (bug, return_response) => {
+                if (bug) {
+                  return callback(err);
+                } else {
+                  var dt = {
+                    key1: result[0],
+                    key2: return_response[0],
+                  };
+                  return callback(null, dt);
+                }
+              }
+            );
+          }
+        }
+      }
+    );
+  },
+  updateIncidentStatus: (data, callback) => {
+    console.log("data", data);
+    pool.query(
+      `UPDATE user SET report_incident=? WHERE id=?`,
+      [1, data.userId],
+      (err, response) => {
+        if (err) {
+          return callback(err);
+        } else {
+          console.log("response", response);
+          return callback(null, response);
+        }
+      }
+    );
+  },
+  changeName: (data, callback) => {
+    pool.query(
+      `Update user set name=? where id =?`,
+      [data.name, data.userId],
+      (err, response) => {
+        if (err) {
+          return callback(err);
+        } else {
+          console.log("response", response);
+          return callback(null, response);
+        }
+      }
+    );
+  },
+  changeContact: (data, callback) => {
+    pool.query(
+      `Update user set contact=? where id =?`,
+      [data.name, data.userId],
+      (err, response) => {
+        if (err) {
+          return callback(err);
+        } else {
+          console.log("response", response);
+          return callback(null, response);
         }
       }
     );

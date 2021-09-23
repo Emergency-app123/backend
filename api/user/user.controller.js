@@ -1,5 +1,6 @@
 const {
   create,
+  changeContact,
   getUserByUserEmail,
   getRegisterMedicalRecord,
   UpdateRegisterEmergency,
@@ -10,6 +11,8 @@ const {
   getUpdateMedicalRecord,
   changePasswordRequest,
   checkImageId,
+  updateIncidentStatus,
+  changeName,
 } = require("./user.service");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -24,8 +27,8 @@ const path = require("path");
 const { Expo } = require("expo-server-sdk");
 
 AWS.config.update({
-  accessKeyId: "AKIA4FRBGE4MOFZHCSGD",
-  secretAccessKey: "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",
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_KEY,
   region: "ap-south-1",
 });
 const s3 = new AWS.S3();
@@ -134,12 +137,14 @@ module.exports = {
   },
   registerEmergencyDetails: (req, res) => {
     var body = req.headers;
+    console.log("hello", req.body);
     var token = body.authorization.split("Bearer");
     const decoded = jwt.verify(token[1].trim(), "qwerty123");
     var existingUser = decoded.result.id;
     if (existingUser !== "") {
       var new_user;
-      if (req.body !== "") {
+      console.log(req.body.length);
+      if (req.body !== "" && req.body !== undefined && req.body.length > 0) {
         new_user = {
           ID: existingUser,
           body: req.body,
@@ -149,7 +154,7 @@ module.exports = {
           ID: existingUser,
         };
       }
-      console.log(new_user);
+      console.log("new_user", new_user);
       registerEmergency(new_user, (err, result) => {
         if (err) {
           console.log(err);
@@ -158,10 +163,18 @@ module.exports = {
             message: "Database connection error",
           });
         } else {
-          return res.status(200).json({
-            success: 1,
-            data: result,
-          });
+          console.log(result);
+          if (result == undefined) {
+            return res.status(200).json({
+              success: 0,
+              message: "Send Some data",
+            });
+          } else {
+            return res.status(200).json({
+              success: 1,
+              data: result,
+            });
+          }
         }
       });
     } else {
@@ -172,6 +185,7 @@ module.exports = {
     }
   },
   updateRegisterEmergencyDetails: (req, res) => {
+    console.log("Hello Data", req.body);
     var body = req.headers;
     var token = body.authorization.split("Bearer");
     const decoded = jwt.verify(token[1].trim(), "qwerty123");
@@ -181,6 +195,7 @@ module.exports = {
         ID: existingUser,
         body: req.body,
       };
+      console.log(new_user);
       UpdateRegisterEmergency(new_user, (err, result) => {
         if (err) {
           console.log(err);
@@ -287,7 +302,6 @@ module.exports = {
                   });
                 }
               } else {
-                console.log(data);
                 checkImageId(data.FaceMatches[0].Face.FaceId, (err, result) => {
                   if (err) {
                     console.log("user is unable to found in database", err);
@@ -296,7 +310,9 @@ module.exports = {
                     const raw = {
                       Age: raw_data.FaceDetails[0].AgeRange.Low,
                       Gender: raw_data.FaceDetails[0].Gender.Value,
-                      userDetails: result,
+                      Name: result.name,
+                      Contact: result.contact,
+                      Email: result.email,
                     };
                     return res.status(200).json({
                       success: 1,
@@ -369,15 +385,16 @@ module.exports = {
   },
   changePassword: (req, res) => {
     var body = req.body;
+    console.log(body);
     const salt = bcrypt.genSaltSync(10);
-    body.password = bcrypt.hashSync(body.password, salt);
+    body.NewPassword = bcrypt.hashSync(body.NewPassword, salt);
     var headers = req.headers;
     var token = headers.authorization.split("Bearer");
     const decoded = jwt.verify(token[1].trim(), "qwerty123");
     var existingUser = decoded.result.id;
     var user_data = {
       userID: existingUser,
-      password: body.password,
+      password: body.NewPassword,
     };
     changePasswordRequest(user_data, (err, results) => {
       if (err) {
@@ -408,18 +425,21 @@ module.exports = {
       if (err) {
         console.log(err);
       } else {
-        console.log(res.notification);
-        if (result.length > 0) {
+        console.log(result);
+
+        if (result.key1 !== undefined) {
           if (!Expo.isExpoPushToken(result.notification)) {
             console.error(
               `Push token ${result.notification} is not a valid Expo push token`
             );
           }
+          console.log("result", result);
           let messages = [];
+
           messages.push({
-            to: result[0].notification,
+            to: result.key1.notification,
             sound: "default",
-            body: "This is a Test notification",
+            body: `Hey Your friend ${result.key2.name} is in dangered his phone number ${result.key2.contact} please call him quickly`,
             data: { withSome: "data" },
           });
           let chunks = expo.chunkPushNotifications(messages);
@@ -482,6 +502,8 @@ module.exports = {
               }
             }
           })();
+        } else {
+          console.log("Try again ");
         }
       }
     });
@@ -500,4 +522,78 @@ module.exports = {
     });
   },
   saveUserlocation: (req, res) => {},
+  setStatusReports: (req, res) => {
+    console.log("hiii", req.body);
+    var headers = req.headers;
+    var token = headers.authorization.split("Bearer");
+    const decoded = jwt.verify(token[1].trim(), "qwerty123");
+    var existingUser = decoded.result.id;
+    var data = {
+      userId: existingUser,
+    };
+    updateIncidentStatus(data, (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: 0,
+          message: "Something went wrong",
+        });
+      } else {
+        console.log("Final result", result);
+        return res.status(200).json({
+          success: 1,
+          message: "Data updated successfully",
+        });
+      }
+    });
+  },
+  ChangeNameOfUser: (req, res) => {
+    const body = req.body;
+    console.log("check Body", body);
+    var headers = req.headers;
+    var token = headers.authorization.split("Bearer");
+    const decoded = jwt.verify(token[1].trim(), "qwerty123");
+    var existingUser = decoded.result.id;
+    const new_body = {
+      name: body.username,
+      userId: existingUser,
+    };
+    changeName(new_body, (err, results) => {
+      if (err) {
+        return res.status(500).json({
+          success: 0,
+          message: "Something went wrong",
+        });
+      } else {
+        return res.status(200).json({
+          success: 1,
+          message: "UserName change successfully",
+        });
+      }
+    });
+  },
+  ChangeContactOfUser: (req, res) => {
+    const body = req.body;
+    console.log("check Body", body);
+    var headers = req.headers;
+    var token = headers.authorization.split("Bearer");
+    const decoded = jwt.verify(token[1].trim(), "qwerty123");
+    var existingUser = decoded.result.id;
+    const new_body = {
+      name: body.contact,
+      userId: existingUser,
+    };
+    changeContact(new_body, (err, results) => {
+      if (err) {
+        return res.status(500).json({
+          success: 0,
+          message: "Something went wrong",
+        });
+      } else {
+        return res.status(200).json({
+          success: 1,
+          message: "UserName change successfully",
+        });
+      }
+    });
+  },
 };

@@ -29,4 +29,47 @@ module.exports = {
       }
     );
   },
+  getAlluser: (callback) => {
+    pool.query("select * from user", (err, data) => {
+      if (err) {
+        return callback(err);
+      } else {
+        console.log(data);
+        return callback(null, data);
+      }
+    });
+  },
+  getuserById: (data, callback) => {
+    pool.query(`select * from user where id =?`, [data], (err, response) => {
+      if (err) {
+        return callback(err);
+      } else {
+        console.log("response", response);
+        return callback(null, response);
+      }
+    });
+  },
+  updateUserData: (data, callback) => {
+    console.log(data);
+    pool.query(
+      `update user set name=?,contact=?,email=? where id=?`,
+      [data.body.name, data.body.contact, data.body.email, data.userId],
+      (err, result) => {
+        if (err) {
+          return callback(err);
+        } else {
+          return callback(null, result);
+        }
+      }
+    );
+  },
+  getNotificationFirst: (callback) => {
+    pool.query(`select * from user where report_incident=1`, (err, result) => {
+      if (err) {
+        return callback(err);
+      } else {
+        return callback(null, result);
+      }
+    });
+  },
 };

@@ -2,11 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const userRouter = require("./api/user/router.user");
+const adminRouter = require("./api/admin/router.admin");
 var bodyParser = require("body-parser");
 
 app.use(bodyParser.json({ limit: "5mb" }));
 app.use(bodyParser.urlencoded({ limit: "5mb", extended: true }));
 app.use("/api/user", userRouter);
+app.use("/api/admin", adminRouter);
 
 app.get("/", function (req, res) {
   res.cookie("cart", "test", { maxAge: 900000, httpOnly: true });
