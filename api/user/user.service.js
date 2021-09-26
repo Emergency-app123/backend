@@ -35,6 +35,7 @@ module.exports = {
     });
   },
   registerEmergency: (data, callback) => {
+    console.log("getting Data", data);
     pool.query(
       "select * from emergency_details where user_id=?",
       [data.ID],
@@ -42,11 +43,9 @@ module.exports = {
         if (error) {
           return callback(error);
         } else {
+          console.log("results", results);
           if (results.length > 0) {
             console.log("check length", results.length);
-            return callback(null, results[0]);
-          } else if (results.length == 0) {
-            console.log(results.length);
             return callback(null, results[0]);
           } else {
             pool.query(

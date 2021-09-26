@@ -141,48 +141,46 @@ module.exports = {
     var token = body.authorization.split("Bearer");
     const decoded = jwt.verify(token[1].trim(), "qwerty123");
     var existingUser = decoded.result.id;
-    if (existingUser !== "") {
-      var new_user;
-      console.log(req.body.length);
-      if (req.body !== "" && req.body !== undefined && req.body.length > 0) {
-        new_user = {
-          ID: existingUser,
-          body: req.body,
-        };
+    console.log("body", req.body.length);
+    console.log("ID", existingUser);
+    console.log(Object.keys(req.body).length);
+    var new_user;
+
+    if (Object.keys(req.body).length > 0) {
+      console.log("has Some Data");
+      new_user = {
+        ID: existingUser,
+        body: req.body,
+      };
+    } else {
+      new_user = {
+        ID: existingUser,
+      };
+    }
+    console.log("new_user", new_user);
+
+    registerEmergency(new_user, (err, result) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({
+          success: 0,
+          message: "Database connection error",
+        });
       } else {
-        new_user = {
-          ID: existingUser,
-        };
-      }
-      console.log("new_user", new_user);
-      registerEmergency(new_user, (err, result) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({
+        console.log("ffffffresult", result);
+        if (result == undefined) {
+          return res.status(200).json({
             success: 0,
-            message: "Database connection error",
+            message: "Send Some data",
           });
         } else {
-          console.log(result);
-          if (result == undefined) {
-            return res.status(200).json({
-              success: 0,
-              message: "Send Some data",
-            });
-          } else {
-            return res.status(200).json({
-              success: 1,
-              data: result,
-            });
-          }
+          return res.status(200).json({
+            success: 1,
+            data: result,
+          });
         }
-      });
-    } else {
-      return res.status(404).json({
-        success: 0,
-        message: "Token expired please Login again",
-      });
-    }
+      }
+    });
   },
   updateRegisterEmergencyDetails: (req, res) => {
     console.log("Hello Data", req.body);
